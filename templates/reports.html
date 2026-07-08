@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}Reports – Weather & Disaster Analysis{% endblock %}
+{% block page_title %}📋 Detailed Reports{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2 class="section-title">Analytical Reports Summary</h2>
+  <p class="section-subtitle">Comprehensive breakdown of weather and disaster patterns from CSV dataset analysis using Pandas & NumPy</p>
+</div>
+
+<!-- Report Cards -->
+<div class="reports-grid">
+  <div class="report-card glass-card animate-in" style="animation-delay:0s">
+    <div class="report-icon">🌡️</div>
+    <h3>Temperature Analysis</h3>
+    <ul class="report-list" id="reportTemp">
+      <li>Loading...</li>
+    </ul>
+  </div>
+  <div class="report-card glass-card animate-in" style="animation-delay:0.1s">
+    <div class="report-icon">🌧️</div>
+    <h3>Rainfall Analysis</h3>
+    <ul class="report-list" id="reportRain">
+      <li>Loading...</li>
+    </ul>
+  </div>
+  <div class="report-card glass-card animate-in" style="animation-delay:0.2s">
+    <div class="report-icon">💨</div>
+    <h3>Wind & Pressure</h3>
+    <ul class="report-list" id="reportWind">
+      <li>Loading...</li>
+    </ul>
+  </div>
+  <div class="report-card glass-card animate-in" style="animation-delay:0.3s">
+    <div class="report-icon">🌪️</div>
+    <h3>Disaster Summary</h3>
+    <ul class="report-list" id="reportDisaster">
+      <li>Loading...</li>
+    </ul>
+  </div>
+  <div class="report-card glass-card animate-in" style="animation-delay:0.4s">
+    <div class="report-icon">⚠️</div>
+    <h3>Risk Intelligence</h3>
+    <ul class="report-list" id="reportRisk">
+      <li>Loading...</li>
+    </ul>
+  </div>
+  <div class="report-card glass-card animate-in" style="animation-delay:0.5s">
+    <div class="report-icon">🏙️</div>
+    <h3>City Impact</h3>
+    <ul class="report-list" id="reportCity">
+      <li>Loading...</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Dataset Info -->
+<div class="dataset-info glass-card">
+  <h3>📂 Dataset Information</h3>
+  <div class="dataset-grid">
+    <div class="dataset-item"><strong>File:</strong> weather_disaster_data.csv</div>
+    <div class="dataset-item"><strong>Records:</strong> <span id="dsRecords">–</span></div>
+    <div class="dataset-item"><strong>Columns:</strong> 21</div>
+    <div class="dataset-item"><strong>Source:</strong> Pre-stored Local CSV</div>
+    <div class="dataset-item"><strong>Processing:</strong> Pandas + NumPy</div>
+    <div class="dataset-item"><strong>Storage:</strong> MongoDB</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', loadReports);
+
+async function loadReports() {
+  showLoading(true);
+  try {
+    const resp = await fetch('/api/dashboard-data/');
+    const data = await resp.json();
+    const s = data.summary;
+    const c = data.charts;
+
+    document.getElementById('dsRecords').textContent = s.total_records || '–';
+
+    // Temperature Report
+    document.getElementById('reportTemp').innerHTML = `
+      <li>Average Temperature: <strong>${s.avg_temperature}°C</strong></li>
+      <li>Hottest Month (avg): <strong>Month ${getMaxKey(c.monthly_temp)}</strong></li>
+      <li>Coldest Month (avg): <strong>Month ${getMinKey(c.monthly_temp)}</strong></li>
+    `;
+
+    // Rainfall Report
+    const topRainCity = Object.keys(c.city_rainfall)[0] || 'N/A';
+    document.getElementById('reportRain').innerHTML = `
+      <li>Total Rainfall: <strong>${s.total_rainfall} mm</strong></li>
+      <li>Highest Avg Rainfall City: <strong>${topRainCity}</strong></li>
+    `;
+
+    // Wind Report
+    document.getElementById('reportWind').innerHTML = `
+      <li>Average Wind Speed: <strong>${s.avg_wind_speed} km/h</strong></li>
+      <li>Average Humidity: <strong>${s.avg_humidity}%</strong></li>
+    `;
+
+    // Disaster Summary
+    const topDisaster = getMaxKey(c.disaster_dist);
+    document.getElementById('reportDisaster').innerHTML = `
+      <li>Most Common Disaster: <strong>${topDisaster}</strong></li>
+      <li>Total Disaster Events: <strong>${Object.values(c.disaster_dist).reduce((a,b) => a+b, 0)}</strong></li>
+      <li>Most Affected City: <strong>${s.most_affected_city}</strong></li>
+    `;
+
+    // Risk Report
+    document.getElementById('reportRisk').innerHTML = `
+      <li>High Risk Alerts: <strong>${s.high_risk_alerts}</strong></li>
+      <li>Critical Disaster Count: <strong>${s.critical_disaster_count}</strong></li>
+      <li>Risk Levels: ${Object.entries(c.risk_dist).map(([k,v]) => `${k}: ${v}`).join(', ')}</li>
+    `;
+
+    // City Report
+    document.getElementById('reportCity').innerHTML = `
+      <li>Most Affected City: <strong>${s.most_affected_city}</strong></li>
+      <li>Total Cities Analyzed: <strong>${Object.keys(c.city_rainfall).length}</strong></li>
+    `;
+
+  } catch(e) { console.error(e); }
+  finally { showLoading(false); }
+}
+
+function getMaxKey(obj) {
+  if (!obj || Object.keys(obj).length === 0) return 'N/A';
+  return Object.entries(obj).reduce((a, b) => b[1] > a[1] ? b : a)[0];
+}
+
+function getMinKey(obj) {
+  if (!obj || Object.keys(obj).length === 0) return 'N/A';
+  return Object.entries(obj).reduce((a, b) => b[1] < a[1] ? b : a)[0];
+}
+</script>
+{% endblock %}

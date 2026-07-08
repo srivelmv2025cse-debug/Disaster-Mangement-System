@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard – Weather & Disaster Analysis{% endblock %}
+{% block page_title %}📊 Overview Dashboard{% endblock %}
+
+{% block content %}
+<!-- Summary Cards -->
+<section class="summary-grid" id="summaryGrid">
+  <div class="card-stat loading-card" id="card-total">
+    <div class="stat-icon">📁</div>
+    <div class="stat-info">
+      <p class="stat-label">Total Records</p>
+      <h2 class="stat-value" id="val-total">–</h2>
+    </div>
+  </div>
+  <div class="card-stat loading-card" id="card-temp">
+    <div class="stat-icon">🌡️</div>
+    <div class="stat-info">
+      <p class="stat-label">Avg Temperature</p>
+      <h2 class="stat-value" id="val-temp">–</h2>
+    </div>
+  </div>
+  <div class="card-stat loading-card" id="card-rain">
+    <div class="stat-icon">🌧️</div>
+    <div class="stat-info">
+      <p class="stat-label">Total Rainfall</p>
+      <h2 class="stat-value" id="val-rain">–</h2>
+    </div>
+  </div>
+  <div class="card-stat loading-card" id="card-risk">
+    <div class="stat-icon">⚠️</div>
+    <div class="stat-info">
+      <p class="stat-label">High Risk Alerts</p>
+      <h2 class="stat-value" id="val-risk">–</h2>
+    </div>
+  </div>
+  <div class="card-stat loading-card" id="card-critical">
+    <div class="stat-icon">🚨</div>
+    <div class="stat-info">
+      <p class="stat-label">Critical Disasters</p>
+      <h2 class="stat-value" id="val-critical">–</h2>
+    </div>
+  </div>
+  <div class="card-stat loading-card" id="card-city">
+    <div class="stat-icon">🏙️</div>
+    <div class="stat-info">
+      <p class="stat-label">Most Affected City</p>
+      <h2 class="stat-value stat-sm" id="val-city">–</h2>
+    </div>
+  </div>
+  <div class="card-stat loading-card" id="card-wind">
+    <div class="stat-icon">💨</div>
+    <div class="stat-info">
+      <p class="stat-label">Avg Wind Speed</p>
+      <h2 class="stat-value" id="val-wind">–</h2>
+    </div>
+  </div>
+  <div class="card-stat loading-card" id="card-hum">
+    <div class="stat-icon">💧</div>
+    <div class="stat-info">
+      <p class="stat-label">Avg Humidity</p>
+      <h2 class="stat-value" id="val-hum">–</h2>
+    </div>
+  </div>
+</section>
+
+<!-- Charts Row 1 -->
+<div class="charts-grid-2">
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>📈 Monthly Temperature Trend</h3>
+    </div>
+    <canvas id="monthlyTempChart" height="260"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>🌧️ City-Wise Rainfall</h3>
+    </div>
+    <canvas id="cityRainfallChart" height="260"></canvas>
+  </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="charts-grid-3">
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>🌪️ Disaster Type Distribution</h3>
+    </div>
+    <canvas id="disasterPieChart" height="240"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>🎯 Risk Level Distribution</h3>
+    </div>
+    <canvas id="riskDonutChart" height="240"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>🔔 Alert Status</h3>
+    </div>
+    <canvas id="alertStatusChart" height="240"></canvas>
+  </div>
+</div>
+
+<!-- Charts Row 3 -->
+<div class="charts-grid-2">
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>⛅ Weather Condition Frequency</h3>
+    </div>
+    <canvas id="weatherCondChart" height="260"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>💦 Rainfall vs River Level (Scatter)</h3>
+    </div>
+    <div id="scatterPlot" style="height:260px;"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    loadDashboardData();
+  });
+
+  async function loadDashboardData() {
+    showLoading(true);
+    try {
+      const response = await fetch('/api/dashboard-data/');
+      const data = await response.json();
+      populateSummaryCards(data.summary);
+      renderAllHomeCharts(data.charts);
+    } catch(e) {
+      console.error('Dashboard error:', e);
+    } finally {
+      showLoading(false);
+    }
+  }
+</script>
+{% endblock %}

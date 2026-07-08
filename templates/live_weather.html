@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}Live Weather – Weather & Disaster Analysis{% endblock %}
+{% block page_title %}⛅ Live Weather Search{% endblock %}
+
+{% block content %}
+<!-- Search Section -->
+<div class="search-section">
+  <div class="search-card glass-card">
+    <h2 class="section-title">Search Real-Time Weather</h2>
+    <p class="section-subtitle">Enter any city name to fetch live weather data from Open-Meteo</p>
+    <div class="search-bar-wrap">
+      <input type="text" id="cityInput" class="search-input" placeholder="e.g. Tokyo, Mumbai, London..." autocomplete="off"/>
+      <button class="btn-primary" id="searchBtn" onclick="fetchWeather()">
+        <span>🔍 Search</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Weather Result -->
+<div id="weatherResult" class="weather-result hidden">
+  <div class="weather-main-card glass-card">
+    <div class="weather-header">
+      <div>
+        <h2 id="weatherCity" class="weather-city">–</h2>
+        <p id="weatherCountry" class="weather-country">–</p>
+      </div>
+      <div class="weather-icon-big" id="weatherIconBig">⛅</div>
+    </div>
+    <div class="weather-metrics-grid">
+      <div class="weather-metric">
+        <span class="metric-icon">🌡️</span>
+        <div>
+          <p class="metric-label">Temperature</p>
+          <p class="metric-val" id="wTemp">–</p>
+        </div>
+      </div>
+      <div class="weather-metric">
+        <span class="metric-icon">💧</span>
+        <div>
+          <p class="metric-label">Humidity</p>
+          <p class="metric-val" id="wHumidity">–</p>
+        </div>
+      </div>
+      <div class="weather-metric">
+        <span class="metric-icon">💨</span>
+        <div>
+          <p class="metric-label">Wind Speed</p>
+          <p class="metric-val" id="wWind">–</p>
+        </div>
+      </div>
+      <div class="weather-metric">
+        <span class="metric-icon">🌤️</span>
+        <div>
+          <p class="metric-label">Condition</p>
+          <p class="metric-val" id="wCondition">–</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 24-hour Forecast Chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>📅 24-Hour Forecast</h3>
+    </div>
+    <canvas id="forecastChart" height="240"></canvas>
+  </div>
+</div>
+
+<!-- News Section -->
+<div class="news-section">
+  <h2 class="section-title">📰 Latest Weather & Disaster News</h2>
+  <div class="news-grid" id="newsGrid">
+    <div class="news-skeleton"></div>
+    <div class="news-skeleton"></div>
+    <div class="news-skeleton"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  loadNews();
+  document.getElementById('cityInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') fetchWeather();
+  });
+});
+
+async function fetchWeather() {
+  const city = document.getElementById('cityInput').value.trim();
+  if (!city) return;
+  showLoading(true);
+  try {
+    const resp = await fetch('/api/weather/', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+      body: JSON.stringify({city})
+    });
+    const data = await resp.json();
+    if (data.error) { alert('Error: ' + data.error); return; }
+    displayWeather(data);
+  } catch(e) { alert('Failed to fetch weather data.'); }
+  finally { showLoading(false); }
+}
+
+function displayWeather(data) {
+  document.getElementById('weatherResult').classList.remove('hidden');
+  document.getElementById('weatherCity').textContent = data.city;
+  document.getElementById('weatherCountry').textContent = '📍 ' + data.country;
+  document.getElementById('wTemp').textContent = data.temperature + '°C';
+  document.getElementById('wHumidity').textContent = data.humidity + '%';
+  document.getElementById('wWind').textContent = data.wind_speed + ' km/h';
+  const codeMap = { range: [[0,0,'☀️ Clear'], [1,3,'🌤️ Partly Cloudy'], [45,67,'🌫️ Fog'], [71,77,'❄️ Snow'], [80,82,'🌧️ Rain Showers'], [95,99,'⛈️ Thunderstorm']] };
+  const code = data.weather_code;
+  let condLabel = '⛅ Unknown';
+  if (code === 0) condLabel = '☀️ Clear';
+  else if (code <= 3) condLabel = '🌤️ Partly Cloudy';
+  else if (code <= 67) condLabel = '🌧️ Rain/Fog';
+  else if (code <= 77) condLabel = '❄️ Snow';
+  else if (code <= 82) condLabel = '🌧️ Showers';
+  else condLabel = '⛈️ Thunderstorm';
+  document.getElementById('wCondition').textContent = condLabel;
+  document.getElementById('weatherIconBig').textContent = condLabel.split(' ')[0];
+  renderForecastChart(data.forecast);
+}
+
+async function loadNews() {
+  try {
+    const resp = await fetch('/api/news/');
+    const data = await resp.json();
+    const grid = document.getElementById('newsGrid');
+    grid.innerHTML = '';
+    (data.news || []).forEach(n => {
+      grid.innerHTML += `
+        <a href="${n.link}" target="_blank" class="news-card glass-card">
+          <div class="news-badge">📰 News</div>
+          <h4>${n.title}</h4>
+          <p class="news-date">${n.pubDate}</p>
+        </a>`;
+    });
+  } catch(e) { console.error(e); }
+}
+</script>
+{% endblock %}

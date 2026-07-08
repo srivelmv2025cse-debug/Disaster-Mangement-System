@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Global Disasters – Weather & Disaster Analysis{% endblock %}
+{% block page_title %}🌪️ Global Disaster Events{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2 class="section-title">Live Disaster Events (NASA EONET)</h2>
+  <p class="section-subtitle">Fetching real-time active natural disaster events from NASA Earth Observatory Natural Event Tracker</p>
+  <button class="btn-primary" id="refreshBtn" onclick="loadDisasters()">🔄 Refresh Events</button>
+</div>
+
+<!-- Risk indicator strip -->
+<div class="risk-strip">
+  <div class="risk-badge badge-normal">🟢 Normal</div>
+  <div class="risk-badge badge-watch">🟡 Watch</div>
+  <div class="risk-badge badge-warning">🟠 Warning</div>
+  <div class="risk-badge badge-emergency">🔴 Emergency</div>
+</div>
+
+<!-- Events Grid -->
+<div class="disasters-grid" id="disastersGrid">
+  <div class="skeleton-card"></div>
+  <div class="skeleton-card"></div>
+  <div class="skeleton-card"></div>
+  <div class="skeleton-card"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', loadDisasters);
+
+async function loadDisasters() {
+  showLoading(true);
+  document.getElementById('refreshBtn').disabled = true;
+  try {
+    const resp = await fetch('/api/disasters/');
+    const data = await resp.json();
+    const grid = document.getElementById('disastersGrid');
+    grid.innerHTML = '';
+    const events = data.events || [];
+    if (events.length === 0) {
+      grid.innerHTML = '<div class="empty-state">No active events found</div>';
+      return;
+    }
+    const iconMap = {
+      'Volcanoes': '🌋', 'Wildfires': '🔥', 'Floods': '🌊',
+      'Storms': '⛈️', 'Earthquakes': '🏚️', 'Landslides': '⛰️',
+      'Drought': '🌵', 'Sea and Lake Ice': '🧊'
+    };
+    events.forEach((ev, i) => {
+      const cat = ev.categories[0] || 'Event';
+      const icon = iconMap[cat] || '🌍';
+      const rawDate = ev.date;
+      const fDate = rawDate && rawDate !== 'Unknown Date'
+        ? new Date(rawDate).toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'})
+        : 'Unknown';
+      grid.innerHTML += `
+        <div class="disaster-card glass-card animate-in" style="animation-delay:${i * 0.08}s">
+          <div class="disaster-icon">${icon}</div>
+          <div class="disaster-body">
+            <span class="disaster-category">${cat}</span>
+            <h3 class="disaster-title">${ev.title}</h3>
+            <p class="disaster-date">📅 ${fDate}</p>
+          </div>
+          <div class="disaster-status">ACTIVE</div>
+        </div>`;
+    });
+  } catch(e) {
+    document.getElementById('disastersGrid').innerHTML = '<div class="empty-state">Failed to load events. Check network.</div>';
+  } finally {
+    showLoading(false);
+    document.getElementById('refreshBtn').disabled = false;
+  }
+}
+</script>
+{% endblock %}

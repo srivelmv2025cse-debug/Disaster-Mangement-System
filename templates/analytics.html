@@ -1,0 +1,254 @@
+{% extends 'base.html' %}
+{% block title %}Analytics – Weather & Disaster Analysis{% endblock %}
+{% block page_title %}📊 Historical Analytics Dashboard{% endblock %}
+
+{% block content %}
+<!-- Filters -->
+<div class="filter-bar glass-card">
+  <div class="filter-group">
+    <label>City</label>
+    <select id="filterCity" onchange="applyFilters()">
+      <option value="">All Cities</option>
+      <option value="New York">New York</option>
+      <option value="Los Angeles">Los Angeles</option>
+      <option value="London">London</option>
+      <option value="Tokyo">Tokyo</option>
+      <option value="Sydney">Sydney</option>
+      <option value="Mumbai">Mumbai</option>
+      <option value="Rio de Janeiro">Rio de Janeiro</option>
+      <option value="Cairo">Cairo</option>
+      <option value="Paris">Paris</option>
+      <option value="Toronto">Toronto</option>
+      <option value="Beijing">Beijing</option>
+      <option value="Moscow">Moscow</option>
+      <option value="Cape Town">Cape Town</option>
+      <option value="Dubai">Dubai</option>
+      <option value="Singapore">Singapore</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Disaster Type</label>
+    <select id="filterDisaster" onchange="applyFilters()">
+      <option value="">All Types</option>
+      <option value="Flood">Flood</option>
+      <option value="Heatwave">Heatwave</option>
+      <option value="Storm">Storm</option>
+      <option value="Drought">Drought</option>
+      <option value="Cyclone">Cyclone</option>
+      <option value="Landslide">Landslide</option>
+      <option value="None">None</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Risk Level</label>
+    <select id="filterRisk" onchange="applyFilters()">
+      <option value="">All Levels</option>
+      <option value="Low">Low</option>
+      <option value="Medium">Medium</option>
+      <option value="High">High</option>
+      <option value="Critical">Critical</option>
+    </select>
+  </div>
+  <button class="btn-secondary" onclick="clearFilters()">🗑️ Clear Filters</button>
+</div>
+
+<!-- Summary Cards -->
+<section class="summary-grid" id="analyticsSummary">
+  <div class="card-stat" id="a-card-total">
+    <div class="stat-icon">📁</div>
+    <div class="stat-info">
+      <p class="stat-label">Total Records</p>
+      <h2 class="stat-value" id="a-val-total">–</h2>
+    </div>
+  </div>
+  <div class="card-stat" id="a-card-temp">
+    <div class="stat-icon">🌡️</div>
+    <div class="stat-info">
+      <p class="stat-label">Avg Temperature</p>
+      <h2 class="stat-value" id="a-val-temp">–</h2>
+    </div>
+  </div>
+  <div class="card-stat" id="a-card-rain">
+    <div class="stat-icon">🌧️</div>
+    <div class="stat-info">
+      <p class="stat-label">Total Rainfall</p>
+      <h2 class="stat-value" id="a-val-rain">–</h2>
+    </div>
+  </div>
+  <div class="card-stat" id="a-card-risk">
+    <div class="stat-icon">⚠️</div>
+    <div class="stat-info">
+      <p class="stat-label">High Risk Alerts</p>
+      <h2 class="stat-value" id="a-val-risk">–</h2>
+    </div>
+  </div>
+  <div class="card-stat" id="a-card-critical">
+    <div class="stat-icon">🚨</div>
+    <div class="stat-info">
+      <p class="stat-label">Critical Count</p>
+      <h2 class="stat-value" id="a-val-critical">–</h2>
+    </div>
+  </div>
+  <div class="card-stat" id="a-card-city">
+    <div class="stat-icon">🏙️</div>
+    <div class="stat-info">
+      <p class="stat-label">Most Affected</p>
+      <h2 class="stat-value stat-sm" id="a-val-city">–</h2>
+    </div>
+  </div>
+  <div class="card-stat" id="a-card-wind">
+    <div class="stat-icon">💨</div>
+    <div class="stat-info">
+      <p class="stat-label">Avg Wind Speed</p>
+      <h2 class="stat-value" id="a-val-wind">–</h2>
+    </div>
+  </div>
+  <div class="card-stat" id="a-card-hum">
+    <div class="stat-icon">💧</div>
+    <div class="stat-info">
+      <p class="stat-label">Avg Humidity</p>
+      <h2 class="stat-value" id="a-val-hum">–</h2>
+    </div>
+  </div>
+</section>
+
+<!-- Charts Row 1 -->
+<div class="charts-grid-2">
+  <div class="chart-card">
+    <div class="chart-header"><h3>📈 Monthly Temperature Trend</h3></div>
+    <canvas id="aMonthlyTempChart" height="260"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header"><h3>🌧️ City-Wise Rainfall</h3></div>
+    <canvas id="aCityRainfallChart" height="260"></canvas>
+  </div>
+</div>
+
+<!-- Charts Row 2 -->
+<div class="charts-grid-3">
+  <div class="chart-card">
+    <div class="chart-header"><h3>🌪️ Disaster Distribution</h3></div>
+    <canvas id="aDisasterPieChart" height="240"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header"><h3>🎯 Risk Level</h3></div>
+    <canvas id="aRiskDonutChart" height="240"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header"><h3>🔔 Alert Status</h3></div>
+    <canvas id="aAlertStatusChart" height="240"></canvas>
+  </div>
+</div>
+
+<!-- Charts Row 3 -->
+<div class="charts-grid-2">
+  <div class="chart-card">
+    <div class="chart-header"><h3>⛅ Weather Conditions</h3></div>
+    <canvas id="aWeatherCondChart" height="260"></canvas>
+  </div>
+  <div class="chart-card">
+    <div class="chart-header"><h3>💦 Rainfall vs River Level</h3></div>
+    <div id="aScatterPlot" style="height:260px;"></div>
+  </div>
+</div>
+
+<!-- Risk Intelligence Section -->
+<div class="intelligence-section glass-card">
+  <h2 class="section-title">🧠 Risk Intelligence Insights</h2>
+  <div class="insight-grid" id="insightGrid">
+    <div class="insight-card flood-card">
+      <span class="insight-icon">🌊</span>
+      <h4>Flood Risk</h4>
+      <p>Detected when rainfall &gt; 100mm and river level &gt; 8m</p>
+      <span class="insight-suggestion">⚡ Suggestion: Issue evacuation advisory for riverside areas</span>
+    </div>
+    <div class="insight-card heat-card">
+      <span class="insight-icon">🔥</span>
+      <h4>Heatwave Risk</h4>
+      <p>Detected when temperature &gt; 38°C and humidity &gt; 60%</p>
+      <span class="insight-suggestion">⚡ Suggestion: Open cooling centers, issue health advisories</span>
+    </div>
+    <div class="insight-card storm-card">
+      <span class="insight-icon">⛈️</span>
+      <h4>Storm Risk</h4>
+      <p>Detected when wind speed &gt; 80 km/h and pressure &lt; 1000 hPa</p>
+      <span class="insight-suggestion">⚡ Suggestion: Secure structures, prepare emergency shelters</span>
+    </div>
+    <div class="insight-card drought-card">
+      <span class="insight-icon">🌵</span>
+      <h4>Drought Risk</h4>
+      <p>Detected when rainfall &lt; 5mm and soil moisture &lt; 20%</p>
+      <span class="insight-suggestion">⚡ Suggestion: Implement water conservation, monitor agriculture</span>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let analyticsCharts = {};
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAnalyticsData();
+  });
+
+  async function loadAnalyticsData(params = '') {
+    showLoading(true);
+    try {
+      const resp = await fetch('/api/dashboard-data/' + (params ? '?' + params : ''));
+      const data = await resp.json();
+      populateAnalyticsSummary(data.summary);
+      renderAnalyticsCharts(data.charts);
+    } catch(e) {
+      console.error('Analytics load error:', e);
+    } finally {
+      showLoading(false);
+    }
+  }
+
+  function populateAnalyticsSummary(s) {
+    if (!s) return;
+    animateValue('a-val-total', s.total_records);
+    document.getElementById('a-val-temp').textContent = s.avg_temperature + '°C';
+    document.getElementById('a-val-rain').textContent = s.total_rainfall + ' mm';
+    animateValue('a-val-risk', s.high_risk_alerts);
+    animateValue('a-val-critical', s.critical_disaster_count);
+    document.getElementById('a-val-city').textContent = s.most_affected_city;
+    document.getElementById('a-val-wind').textContent = s.avg_wind_speed + ' km/h';
+    document.getElementById('a-val-hum').textContent = s.avg_humidity + '%';
+  }
+
+  function renderAnalyticsCharts(c) {
+    if (!c) return;
+    // Destroy existing charts
+    Object.values(analyticsCharts).forEach(ch => { if (ch && ch.destroy) ch.destroy(); });
+    analyticsCharts = {};
+
+    analyticsCharts.temp = renderLineChart('aMonthlyTempChart', c.monthly_temp, 'Avg Temperature (°C)');
+    analyticsCharts.rain = renderBarChart('aCityRainfallChart', c.city_rainfall, 'Avg Rainfall (mm)');
+    analyticsCharts.disaster = renderPieChart('aDisasterPieChart', c.disaster_dist, 'Disaster Types');
+    analyticsCharts.risk = renderDonutChart('aRiskDonutChart', c.risk_dist, 'Risk Levels');
+    analyticsCharts.alert = renderBarChart('aAlertStatusChart', c.alert_dist, 'Alert Status');
+    analyticsCharts.weather = renderBarChart('aWeatherCondChart', c.weather_cond, 'Weather Conditions');
+    renderScatterPlotly('aScatterPlot', c.scatter_data);
+  }
+
+  function applyFilters() {
+    const city = document.getElementById('filterCity').value;
+    const disaster = document.getElementById('filterDisaster').value;
+    const risk = document.getElementById('filterRisk').value;
+    const params = new URLSearchParams();
+    if (city) params.set('city', city);
+    if (disaster) params.set('disaster_type', disaster);
+    if (risk) params.set('risk_level', risk);
+    loadAnalyticsData(params.toString());
+  }
+
+  function clearFilters() {
+    document.getElementById('filterCity').value = '';
+    document.getElementById('filterDisaster').value = '';
+    document.getElementById('filterRisk').value = '';
+    loadAnalyticsData();
+  }
+</script>
+{% endblock %}

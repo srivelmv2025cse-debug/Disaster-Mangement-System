@@ -1,0 +1,85 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Weather & Disaster Forecast Analysis{% endblock %}</title>
+  <meta name="description" content="Real-time weather forecast, disaster monitoring, and advanced analytics dashboard."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+<body>
+  <!-- Ambient particles -->
+  <div class="particles" id="particles"></div>
+
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">🌍</span>
+        <span class="brand-text">WeatherSys</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <a href="{% url 'home' %}" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}" id="nav-home">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="{% url 'live_weather' %}" class="nav-item {% if request.resolver_match.url_name == 'live_weather' %}active{% endif %}" id="nav-weather">
+          <span class="nav-icon">⛅</span>
+          <span class="nav-label">Live Weather</span>
+        </a>
+        <a href="{% url 'disasters' %}" class="nav-item {% if request.resolver_match.url_name == 'disasters' %}active{% endif %}" id="nav-disasters">
+          <span class="nav-icon">🌪️</span>
+          <span class="nav-label">Disasters</span>
+        </a>
+        <a href="{% url 'analytics' %}" class="nav-item {% if request.resolver_match.url_name == 'analytics' %}active{% endif %}" id="nav-analytics">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">Analytics</span>
+        </a>
+        <a href="{% url 'history' %}" class="nav-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}" id="nav-history">
+          <span class="nav-icon">🕐</span>
+          <span class="nav-label">History</span>
+        </a>
+        <a href="{% url 'reports' %}" class="nav-item {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" id="nav-reports">
+          <span class="nav-icon">📋</span>
+          <span class="nav-label">Reports</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-dot"></div>
+        <span>MongoDB Connected</span>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Topbar -->
+      <header class="topbar">
+        <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰</button>
+        <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+        <div class="topbar-time" id="topbar-clock"></div>
+      </header>
+
+      <div class="page-content">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
+  </div>
+
+  <!-- Loading overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loader-ring"></div>
+    <p>Loading data...</p>
+  </div>
+
+  <script src="{% static 'js/dashboard.js' %}"></script>
+  <script src="{% static 'js/charts.js' %}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

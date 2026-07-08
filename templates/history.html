@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Search History – Weather & Disaster Analysis{% endblock %}
+{% block page_title %}🕐 Search History{% endblock %}
+
+{% block content %}
+<div class="section-header">
+  <h2 class="section-title">MongoDB Search History</h2>
+  <p class="section-subtitle">All your past weather searches stored in MongoDB</p>
+</div>
+
+<div class="history-table-card glass-card">
+  <table class="data-table" id="historyTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>City</th>
+        <th>Searched At</th>
+      </tr>
+    </thead>
+    <tbody id="historyBody">
+      <tr><td colspan="3" class="table-loading">Loading history...</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', loadHistory);
+
+async function loadHistory() {
+  try {
+    const resp = await fetch('/api/search-history/');
+    const data = await resp.json();
+    const tbody = document.getElementById('historyBody');
+    tbody.innerHTML = '';
+    const history = data.history || [];
+    if (history.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" class="table-empty">No search history yet. Try searching for a city!</td></tr>';
+      return;
+    }
+    history.forEach((item, i) => {
+      const ts = item.timestamp ? new Date(item.timestamp).toLocaleString() : 'N/A';
+      tbody.innerHTML += `
+        <tr class="animate-in" style="animation-delay:${i * 0.04}s">
+          <td class="row-num">${i + 1}</td>
+          <td class="row-city">📍 ${item.city}</td>
+          <td class="row-date">${ts}</td>
+        </tr>`;
+    });
+  } catch(e) {
+    document.getElementById('historyBody').innerHTML = '<tr><td colspan="3">Error loading history</td></tr>';
+  }
+}
+</script>
+{% endblock %}
